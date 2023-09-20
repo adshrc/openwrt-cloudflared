@@ -19,6 +19,44 @@ decode_tar_string() {
   fi
 }
 
+# Function to display script usage
+display_usage() {
+  echo "Usage: $0 [--import=<base64_string>] [-l] [--help]"
+  echo "Options:"
+  echo "  -l                         Start with Cloudflare login (Domain + Account required)"
+  echo "  --import=<base64_string>   Import a Cloudflared config from a base64 string"
+  echo "  --help                     Display this help message"
+}
+
+# Initialize variables
+login=false
+import_string=""
+tunnel_url="http://localhost:8080"  # Default tunnel URL
+
+# Parse command-line arguments
+for arg in "$@"; do
+  case "$arg" in
+    --import=*)
+      import_string="${arg#*=}"
+      ;;
+    -l)
+      login=true
+      ;;
+    --url=*)
+      tunnel_url="${arg#*=}"
+      ;;
+    --help)
+      display_usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $arg"
+      display_usage
+      exit 1
+      ;;
+  esac
+done
+
 # Create necessary directories
 echo "Creating directories..."
 mkdir -p /tmp/cloudflared/root
@@ -88,10 +126,18 @@ done
 echo "All dependencies copied to their respective folders in /tmp/cloudflared."
 echo ""
 
-# Check if two parameters are provided for decryption
-if [ $# -eq 1 ]; then
+# Check if login is set to false and tunnel_url is not empty
+if [ "$login" = false ] then
+  echo "Starting Quick tunnel for URL: $tunnel_url"
+  echo ""
+  chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel --url "$tunnel_url"
+  exit 0
+fi
+
+# Check if --import parameter is provided for decryption
+if [ -n "$import_string" ]; then
   echo "Restoring /root/.cloudflared..."
-  decode_tar_string "$1" "/tmp/cloudflared/root/"
+  decode_tar_string "$import_string" "/tmp/cloudflared/root/"
   echo "/root/.cloudflared restored."
   echo ""
 else
@@ -112,7 +158,7 @@ else
 
   # Print the command for future execution
   echo "To start this Tunnel next time (or to execute after bootup), run:"
-  echo "cd /tmp && wget -qO- https://raw.githubusercontent.com/adshrc/openwrt-cloudflared/main/script.sh | ash -s -- \"$tar_string\""
+  echo "wget -qO- https://raw.githubusercontent.com/adshrc/openwrt-cloudflared/main/script.sh | ash -- --import=\"$tar_string\""
   echo ""
 fi
 
