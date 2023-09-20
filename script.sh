@@ -7,8 +7,8 @@ run_command() {
 
 # Function to create a tar archive as a string
 create_tar_string() {
-  if [ -f "$1" ]; then
-    tar -czf - -C "$2" "$(basename "$1")" | base64
+  if [ -f "$1" ] || [ -d "$1" ]; then
+    tar -czf - -C "$(dirname "$1")" "$(basename "$1")" | base64 | tr -d '\n'
   fi
 }
 
@@ -19,17 +19,9 @@ decode_tar_string() {
   fi
 }
 
-# Function to extract TunnelID from JSON content
-extract_tunnel_id() {
-  if [ -n "$1" ]; then
-    tunnel_id=$(echo "$1" | awk -F'"TunnelID":' '{print $2}' | tr -d '", }')
-    echo "$tunnel_id"
-  fi
-}
-
 # Create necessary directories
 echo "Creating directories..."
-mkdir -p /tmp/cloudflared/root/.cloudflared
+mkdir -p /tmp/cloudflared/root
 mkdir -p /tmp/cloudflared/proc
 mkdir -p /tmp/cloudflared/etc/ssl
 cp -r /etc/ssl /tmp/cloudflared/etc/
@@ -97,31 +89,16 @@ echo "All dependencies copied to their respective folders in /tmp/cloudflared."
 echo ""
 
 # Check if two parameters are provided for decryption
-if [ $# -eq 2 ]; then
-  echo "Decoding and extracting cert.pem..."
-  decode_tar_string "$1" /tmp/cloudflared/root/.cloudflared/cert.pem
-  echo "cert.pem content decoded and extracted."
-  echo ""
-
-  echo "Decoding and extracting JSON content..."
-  decode_tar_string "$2" /tmp/cloudflared/root/.cloudflared/temp.json
-  echo ""
-  
-  # Extract the TunnelID from the JSON file to determine its name
-  tunnel_id=$(extract_tunnel_id "$(cat /tmp/cloudflared/root/.cloudflared/temp.json)")
-
-  # Rename the JSON file with the TunnelID
-  if [ -n "$tunnel_id" ]; then
-    mv "/tmp/cloudflared/root/.cloudflared/temp.json" "/tmp/cloudflared/root/.cloudflared/$tunnel_id.json"
-  fi
-
-  echo "JSON content decoded and extracted."
+if [ $# -eq 1 ]; then
+  echo "Restoring /root/.cloudflared..."
+  decode_tar_string "$1" "/tmp/cloudflared/root/"
+  echo "/root/.cloudflared restored."
   echo ""
 else
-  # Execute chroot and echo success
+  # Execute chroot
   echo "Starting cloudflared tunnel login..."
   chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel login
-  echo "Login process finished."
+  echo "Login finished."
   echo ""
 
   # Create tunnel
@@ -131,12 +108,11 @@ else
   echo ""
 
   # Create a tar archive as a string for later use
-  cert_tar_string=$(create_tar_string /tmp/cloudflared/root/.cloudflared/cert.pem /tmp/cloudflared/root/.cloudflared)
-  json_tar_string=$(create_tar_string /tmp/cloudflared/root/.cloudflared/*.json /tmp/cloudflared/root/.cloudflared)
+  tar_string=$(create_tar_string /tmp/cloudflared/root/.cloudflared/)
 
   # Print the command for future execution
-  echo "To start this Tunnel next time (or to execute after bootup), use:"
-  echo "./script.sh \"$cert_tar_string\" \"$json_tar_string\""
+  echo "To start this Tunnel next time (or to execute after bootup), run:"
+  echo "cd /tmp && wget -qO- https://raw.githubusercontent.com/adshrc/openwrt-cloudflared/main/script.sh | ash -s -- \"$tar_string\""
   echo ""
 fi
 
