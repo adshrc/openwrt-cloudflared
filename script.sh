@@ -127,7 +127,7 @@ echo "All dependencies copied to their respective folders in /tmp/cloudflared."
 echo ""
 
 # Check if login is set to false and tunnel_url is not empty
-if [ "$login" = false ] then
+if [ "$login" = false ]; then
   echo "Starting Quick tunnel for URL: $tunnel_url"
   echo ""
   chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel --url "$tunnel_url"
@@ -158,7 +158,7 @@ else
 
   # Print the command for future execution
   echo "To start this Tunnel next time (or to execute after bootup), run:"
-  echo "wget -qO- https://raw.githubusercontent.com/adshrc/openwrt-cloudflared/main/script.sh | ash -- --import=\"$tar_string\""
+  echo "wget -qO- https://raw.githubusercontent.com/adshrc/openwrt-cloudflared/main/script.sh | ash -s -- --import=\"$tar_string\""
   echo ""
 fi
 
