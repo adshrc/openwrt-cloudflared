@@ -128,9 +128,25 @@ echo ""
 
 # Check if login is set to false and tunnel_url is not empty
 if [ "$login" = false ]; then
-  echo "Starting Quick tunnel for URL: $tunnel_url"
+  echo "Starting Quick Tunnel for URL: $tunnel_url"
   echo ""
-  chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel --url "$tunnel_url"
+
+  # Create a temporary named pipe
+  mkfifo /tmp/cloudflared/qtpipe
+
+  # Start cloudflared and redirect its output to the named pipe
+  chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel --url "$tunnel_url" > /tmp/cloudflared/qtpipe 2>&1 &
+
+  # Read the named pipe's content, search for the URL, and print it
+  cat /tmp/myfifo | while read LINE; do
+    if [[ $LINE =~ https://[a-zA-Z0-9-]+\.trycloudflare\.com ]]; then
+      echo "Your tunnel is up and running. Access it though ${BASH_REMATCH[0]}"
+      break
+    fi
+  done
+
+  # Clean up and exit
+  rm /tmp/cloudflared/qtpipe
   exit 0
 fi
 
