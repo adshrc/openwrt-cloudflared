@@ -132,7 +132,7 @@ echo "All dependencies copied to their respective folders in /tmp/cloudflared."
 echo ""
 
 # Check if login is set to false and tunnel_url is not empty
-if [ "$login" = false ]; then
+if [ "$login" = false ] && [ -z "$import_string" ]; then
   echo "Starting Quick Tunnel for URL: $tunnel_url"
   echo ""
 
