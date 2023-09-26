@@ -136,21 +136,22 @@ if [ "$login" = false ]; then
   echo "Starting Quick Tunnel for URL: $tunnel_url"
   echo ""
 
-  # Create a temporary named pipe
-  mkfifo /tmp/cloudflared/qtpipe
+  # Start cloudflared and redirect its output to the log file
+  chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel --url "$tunnel_url" > /tmp/cloudflared/cloudflared.log 2>&1 &
 
-  # Start cloudflared and redirect its output to the named pipe
-  chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel --url "$tunnel_url" > /tmp/cloudflared/qtpipe 2>&1 &
+  # Give the process a moment to start and populate the logfile
+  sleep 2
 
-  # Read the named pipe's content, search for the URL, and print it
-  cat /tmp/cloudflared/qtpipe | while read -r LINE; do
-    url=$(echo "$LINE" | grep -oE 'https://[a-zA-Z0-9\-]+\.trycloudflare\.com' | head -n 1)
-    if [ ! -z "$url" ]; then
-      echo "Your tunnel is up and running! URL: $url"
-      break
-    fi
+  # Monitor the log file and search for the URL
+  tail -f /tmp/cloudflared/cloudflared.log | while read -r LINE; do
+      url=$(echo "$LINE" | grep -oE 'https://[a-zA-Z0-9\-]+\.trycloudflare\.com' | head -n 1)
+      if [ ! -z "$url" ]; then
+          echo "Your tunnel is up and running! URL: $url"
+          break
+      fi
   done
 
+  # Detach and let processes run
   exit 0
 fi
 
