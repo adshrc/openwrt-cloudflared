@@ -20,8 +20,9 @@ This script simplifies the process of setting up a Cloudflare Tunnel on an OpenW
 2. Copy and execute the following command (adjust the `--url` parameter for your needs)
 
    ```sh
-   wget -qO- https://raw.githubusercontent.com/adshrc/openwrt-cloudflared/main/script.sh | ash -s -- --url=http://localhost:3000
+   wget -qO- https://raw.githubusercontent.com/adshrc/openwrt-cloudflared/main/script.sh | ash -s -- --url=http://<device-ip>:80
    ```
+`<device-ip>` is your Device's IP Address, that you are builing a Tunnel to. E.g. `192.168.1.10`.
 
 That's it! Just copy the `*.trycloudflare.com` sub-domain you get from the script and enjoy!
 
