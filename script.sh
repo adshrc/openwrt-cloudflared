@@ -143,15 +143,14 @@ if [ "$login" = false ]; then
   chroot /tmp/cloudflared/ /usr/bin/cloudflared tunnel --url "$tunnel_url" > /tmp/cloudflared/qtpipe 2>&1 &
 
   # Read the named pipe's content, search for the URL, and print it
-  cat /tmp/cloudflared/qtpipe | while read LINE; do
-    if [[ $LINE =~ https://[a-zA-Z0-9-]+\.trycloudflare\.com ]]; then
-      echo "Your tunnel is up and running. Access it though ${BASH_REMATCH[0]}"
+  cat /tmp/cloudflared/qtpipe | while read -r LINE; do
+    url=$(echo "$LINE" | grep -oE 'https://[a-zA-Z0-9\-]+\.trycloudflare\.com' | head -n 1)
+    if [ ! -z "$url" ]; then
+      echo "Your tunnel is up and running! URL: $url"
       break
     fi
   done
 
-  # Clean up and exit
-  rm /tmp/cloudflared/qtpipe
   exit 0
 fi
 
