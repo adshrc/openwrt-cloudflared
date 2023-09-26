@@ -61,8 +61,11 @@ done
 echo "Creating directories..."
 mkdir -p /tmp/cloudflared/root
 mkdir -p /tmp/cloudflared/proc
+mkdir -p /tmp/cloudflared/sys
+mkdir -p /tmp/cloudflared/dev
 mkdir -p /tmp/cloudflared/etc/ssl
 cp -r /etc/ssl /tmp/cloudflared/etc/
+cp /etc/resolv.conf /tmp/cloudflared/etc/resolv.conf
 echo "Directories created."
 echo ""
 
@@ -109,9 +112,11 @@ echo "Default config file removed."
 echo ""
 
 # Mount the proc filesystem
-echo "Mounting proc filesystem..."
+echo "Mounting proc, dev and sys filesystem..."
 run_command mount -t proc proc /tmp/cloudflared/proc
-echo "Proc filesystem mounted."
+run_command mount -t sysfs none /tmp/cloudflared/sys
+run_command mount --bind /dev /tmp/cloudflared/dev
+echo "Proc, dev and sys filesystems mounted."
 echo ""
 
 # Copy dependencies to their respective folders
