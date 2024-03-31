@@ -1,11 +1,10 @@
 # Single Command Tunnel for OpenWrt
 
-**UPD** the OpenWrt feed now has the `cloudflared` package and Luci Application `luci-app-cloudflared` that provides a GUI for configuration.
-You can install them with the command `opkg install cloudflared luci-app-cloudflared`
-
 ### You want to expose a device in your local network to the Internet? Easy.
 
 This script simplifies the process of setting up a Cloudflare Tunnel on an OpenWrt router. It allows you to run Cloudflared Tunnel on your router without needing to permanently install the large Cloudflared package, making it suitable for routers with limited storage. Access your home network, server, or database from anywhere. Fast, easy, and free!
+
+**Notice:** Consider looking into the official Wiki: https://openwrt.org/docs/guide-user/services/vpn/cloudfare_tunnel
 
 ## Prerequisites
 
